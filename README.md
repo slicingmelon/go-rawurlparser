@@ -83,6 +83,69 @@ func main() {
 - Raw preservation of special characters
 - Simple and fast parsing
 
+## Tests
+
+```bash
+go run .\examples\main.go
+
+Testing URL: https://example.com/x/。。;//
+----------------------------------------
+url.Parse:
+Full URL: https://example.com/x/%E3%80%82%E3%80%82;//
+Path: /x/。。;//
+RawPath: /x/。。;//
+
+rawurlparser.RawURLParse:
+Full URL: https://example.com/x/。。;//
+Path: /x/。。;//
+
+## Closer URLs Comparison ##
+Standard UrlParser: https://example.com/x/%E3%80%82%E3%80%82;//
+RawUrlPaser:      https://example.com/x/。。;//
+
+========================================
+
+Testing URL: https://example.com/x/。。;//
+----------------------------------------
+url.Parse:
+Full URL: https://example.com/x/%E3%80%82%E3%80%82;//
+Path: /x/。。;//
+RawPath: /x/。。;//
+
+rawurlparser.RawURLParse:
+Full URL: https://example.com/x/。。;//
+Path: /x/。。;//
+
+## Closer URLs Comparison ##
+Standard UrlParser: https://example.com/x/%E3%80%82%E3%80%82;//
+RawUrlPaser:      https://example.com/x/。。;//
+
+========================================
+
+Testing URL: https://example.com\..\.\
+----------------------------------------
+url.Parse error: parse "https://example.com\\..\\.\\": invalid character "\\" in host name
+
+rawurlparser.RawURLParse:
+Full URL: https://example.com\..\.\
+Path:
+========================================
+
+Testing URL: https://example.com#
+----------------------------------------
+url.Parse:
+Full URL: https://example.com
+Path:
+RawPath:
+
+rawurlparser.RawURLParse:
+Full URL: https://example.com#
+Path:
+
+## Closer URLs Comparison ##
+Standard UrlParser: https://example.com
+RawUrlPaser:      https://example.com#
+```
 
 ## Author
 
