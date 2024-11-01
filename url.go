@@ -1,4 +1,21 @@
 // File: url.go
+/*
+Package rawurlparser provides URL parsing functionality that preserves exact URL paths.
+
+Note on HTTP Requests:
+When using parsed URLs with Go's http.Client, you'll need to use URL.Opaque to preserve
+the exact path encoding. Example:
+
+    parsedURL := rawurlparser.Parse(rawURL)
+    req := &http.Request{
+        Method: "GET",
+        URL: &url.URL{
+            Scheme: parsedURL.Scheme,
+            Host:   parsedURL.Host,
+            Opaque: parsedURL.Path,  // Use Opaque to prevent path normalization
+        },
+    }
+*/
 package rawurlparse
 
 import "strings"
