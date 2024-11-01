@@ -32,7 +32,7 @@ req := &http.Request{
 
 In other words, this achieves the same thing as sending a request with curl using `--path-as-is`
 
-## Other Methods
+## Other Problematic Methods
 
 I found that Go's `to.String()` also applies encodings, do not use on URLs or when debugging URLs.
 
