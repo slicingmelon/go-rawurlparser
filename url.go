@@ -16,7 +16,7 @@ the exact path encoding. Example:
         },
     }
 */
-package rawurlparse
+package rawurlparser
 
 import "strings"
 

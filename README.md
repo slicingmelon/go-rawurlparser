@@ -19,7 +19,7 @@ the exact path encoding, otherwise http.Client will perform encodings, normaliza
 Example Code to preserve and send raw URLs
 
 ```go
-parsedURL := rawurlparser.Parse(rawURL)
+parsedURL := rawurlparser.RawURLParse(rawURL)
 req := &http.Request{
     Method: "GET",
     URL: &url.URL{
@@ -65,7 +65,7 @@ import (
 
 func main() {
     url := "https://example.com/path1/..%2f/test?q=1#fragment"
-    parsed := rawurlparse.RawURLParse(url)
+    parsed := rawurlparser.RawURLParse(url)
     
     fmt.Printf("Scheme:   %q\n", parsed.Scheme)
     fmt.Printf("Host:     %q\n", parsed.Host)
