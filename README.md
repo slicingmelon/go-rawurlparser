@@ -6,6 +6,47 @@ A Go package that parses URLs in their raw form, with:
 - No validation
 - Preserves exact characters as provided
 
+Unlike the standard library's url.Parse which uses Opaque for non-hierarchical URLs,
+this package preserves the exact path encoding for all URLs. When using with http.Client,
+the raw path should be assigned to URL.Opaque to prevent normalization.
+
+# Important Notice
+
+## Go's http.Client
+When using parsed URLs with Go's `http.Client`, you'll need to use URL.Opaque to preserve
+the exact path encoding, otherwise http.Client will perform encodings, normalization, etc. 
+
+Example Code to preserve and send raw URLs
+
+```go
+parsedURL := rawurlparser.Parse(rawURL)
+req := &http.Request{
+    Method: "GET",
+    URL: &url.URL{
+        Scheme: parsedURL.Scheme,
+        Host:   parsedURL.Host,
+        Opaque: parsedURL.Path,  // Use Opaque to prevent path normalization
+    },
+}
+```
+
+In other words, this achieves the same thing as sending a request with curl using `--path-as-is`
+
+## Other Methods
+
+I found that Go's `to.String()` also applies encodings, do not use on URLs or when debugging URLs.
+
+Use something like this:
+```go
+log.Printf("Debug - Request Components - Scheme: %s, Host: %s, Path: %s, RawPath: %s, Opaque: %s",
+    req.URL.Scheme,
+    req.URL.Host,
+    req.URL.Path,
+    req.URL.RawPath,
+    req.URL.Opaque,
+)
+```
+
 ## Installation
 
 ```bash
@@ -42,6 +83,12 @@ func main() {
 - Raw preservation of special characters
 - Simple and fast parsing
 
+
+## Author
+
+Petru Surugiu<br>
+https://twitter.com/pedro_infosec
+
 ## License
 
-MIT License --
+MIT License
