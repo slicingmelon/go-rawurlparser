@@ -1,18 +1,29 @@
 # RawURLParse
 
-A Go package that parses URLs in their raw form, with:
-- No normalization
+A Go package that parses URLs in their raw form.
+
+- Preserves all characters exactly as provided
+- No normalization of paths
 - No encoding/decoding
 - No validation
-- Preserves exact characters as provided
 
 Unlike the standard library's url.Parse which uses Opaque for non-hierarchical URLs,
 this package preserves the exact path encoding for all URLs. When using with http.Client,
 the raw path should be assigned to URL.Opaque to prevent normalization.
 
-# Important Notice
+## Features
 
-## Go's http.Client
+- Preserves all characters exactly as provided
+- No normalization of paths
+- No encoding/decoding
+- Raw preservation of special characters
+- Simple and fast parsing
+- Helper methods for port, hostname, and query parsing
+- Optional error handling with RawURLParseWithError
+
+## Important Notice
+
+### Go's http.Client
 When using parsed URLs with Go's `http.Client`, you'll need to use URL.Opaque to preserve
 the exact path encoding, otherwise http.Client will perform encodings, normalization, etc. 
 
@@ -32,9 +43,9 @@ req := &http.Request{
 
 In other words, this achieves the same thing as sending a request with curl using `--path-as-is`
 
-## Other Problematic Methods
+### Other Problematic Methods
 
-I found that Go's `to.String()` also applies encodings, do not use on URLs or when debugging URLs.
+I found that Go's `to.String()` also applies encodings, do not use it on URLs or when debugging URLs.
 
 Use something like this:
 ```go
@@ -75,13 +86,30 @@ func main() {
 }
 ```
 
-## Features
+## Helper Methods
 
-- Preserves all characters exactly as provided
-- No normalization of paths
-- No encoding/decoding
-- Raw preservation of special characters
-- Simple and fast parsing
+The URL struct provides several helper methods:
+
+- `Port()` - Returns the port number from the host if present
+- `Hostname()` - Returns the hostname without the port
+- `QueryValues()` - Parses query string into a map[string][]string
+- `FullString()` - Reconstructs the full URL from its components
+
+## Error Handling
+
+The package provides two parsing functions:
+
+- `RawURLParse()` - Returns a URL struct or nil if error
+- `RawURLParseWithError()` - Returns a URL struct or an error
+
+Example with error handling:
+
+```go
+url, err := RawURLParseWithError("example.com/path")
+if err != nil {
+    log.Fatal("Invalid URL:", err) // Will error: missing scheme
+}
+```
 
 ## Tests
 
