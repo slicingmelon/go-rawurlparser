@@ -11,10 +11,10 @@ import (
 	"strings"
 )
 
-// URL represents a raw URL with no normalization or encoding.
+// RawURL represents a raw URL with no normalization or encoding.
 // It preserves the exact format of the original URL string,
 // including any percent-encoding or special characters.
-type URL struct {
+type RawURL struct {
 	Original string    // The original, unmodified URL string
 	Scheme   string    // The URL scheme (e.g., "http", "https")
 	Opaque   string    // For non-hierarchical URLs (e.g., mailto:user@example.com)
@@ -33,17 +33,17 @@ type Userinfo struct {
 }
 
 // String returns the original URL string
-func (u *URL) String() string {
+func (u *RawURL) String() string {
 	return u.Original
 }
 
 // RawURLParseWithError is like RawURLParse but returns an error if URL is invalid
-func RawURLParseWithError(rawURL string) (*URL, error) {
+func RawURLParseWithError(rawURL string) (*RawURL, error) {
 	if len(rawURL) == 0 {
 		return nil, errors.New("empty URL")
 	}
 
-	result := &URL{
+	result := &RawURL{
 		Original: rawURL,
 	}
 
@@ -105,7 +105,7 @@ func RawURLParseWithError(rawURL string) (*URL, error) {
 }
 
 // Keep the original function for backward compatibility
-func RawURLParse(rawURL string) *URL {
+func RawURLParse(rawURL string) *RawURL {
 	result, _ := RawURLParseWithError(rawURL)
 	return result
 }
@@ -113,7 +113,7 @@ func RawURLParse(rawURL string) *URL {
 // Helper methods
 //
 // FullString reconstructs the URL from its components
-func (u *URL) FullString() string {
+func (u *RawURL) FullString() string {
 	var buf strings.Builder
 
 	if u.Scheme != "" {
@@ -146,21 +146,21 @@ func (u *URL) FullString() string {
 	return buf.String()
 }
 
-func (u *URL) Port() string {
+func (u *RawURL) Port() string {
 	if i := strings.LastIndex(u.Host, ":"); i != -1 {
 		return u.Host[i+1:]
 	}
 	return ""
 }
 
-func (u *URL) Hostname() string {
+func (u *RawURL) Hostname() string {
 	if i := strings.LastIndex(u.Host, ":"); i != -1 {
 		return u.Host[:i]
 	}
 	return u.Host
 }
 
-func (u *URL) QueryValues() map[string][]string {
+func (u *RawURL) QueryValues() map[string][]string {
 	values := make(map[string][]string)
 	for _, pair := range strings.Split(u.Query, "&") {
 		if pair == "" {
