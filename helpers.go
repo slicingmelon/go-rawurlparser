@@ -45,21 +45,39 @@ func (u *RawURL) FullString() string {
 }
 
 // GetRawScheme reconstructs the scheme from its components
-func GetRawSche(u *RawURL) string {
-	// xx
-	//return buf.string()
+func GetRawScheme(u *RawURL) string {
+	if u.Scheme == "" {
+		return ""
+	}
+	var buf strings.Builder
+	buf.WriteString(u.Scheme)
+	buf.WriteString("://")
+	return buf.String()
 }
 
 // GetRawUserInfo reconstructs the userinfo from its components
 func GetRawUserInfo(u *RawURL) string {
+	if u.User == nil {
+		return ""
+	}
 	var buf strings.Builder
-	// xx
-	//return buf.string()
+	buf.WriteString(u.User.username)
+	if u.User.passwordSet {
+		buf.WriteRune(':')
+		buf.WriteString(u.User.password)
+	}
+	buf.WriteRune('@')
+	return buf.String()
 }
 
 // GetRawAuthority reconstructs the authority from its components
 func GetRawAuthority(u *RawURL) string {
-	return u.Host
+	var buf strings.Builder
+	if u.User != nil {
+		buf.WriteString(GetRawUserInfo(u))
+	}
+	buf.WriteString(u.Host)
+	return buf.String()
 }
 
 // GetRawHostname reconstructs the hostname of the URL (without port)
@@ -80,23 +98,60 @@ func GetRawPort(u *RawURL) string {
 
 // GetRawPath reconstructs the path from its components
 func GetRawPath(u *RawURL) string {
-	// xx
+	var buf strings.Builder
+	if u.Path == "" {
+		buf.WriteString("/")
+		return buf.String()
+	}
+
+	// Check first byte directly for '/'
+	if len(u.Path) > 0 && u.Path[0] != '/' {
+		buf.WriteString("/")
+	}
+	buf.WriteString(u.Path)
+	return buf.String()
 }
 
 // GetRawPathUnsafe reconstructs the path from its components
 // Similar to GetRawPath but will omit first / in path
+// Might be needed when fuzzing full paths
 func GetRawPathUnsafe(u *RawURL) string {
-	// xx
+	if u.Path == "" {
+		return ""
+	}
+
+	var buf strings.Builder
+	// Skip first char if it's a '/'
+	if len(u.Path) > 0 {
+		if u.Path[0] == '/' {
+			buf.WriteString(u.Path[1:])
+		} else {
+			buf.WriteString(u.Path)
+		}
+	}
+	return buf.String()
 }
 
 // GetRawQuery reconstructs the query from its components
 func GetRawQuery(u *RawURL) string {
-	// xx
+	if u.Query == "" {
+		return ""
+	}
+	var buf strings.Builder
+	buf.WriteRune('?')
+	buf.WriteString(u.Query)
+	return buf.String()
 }
 
 // GetRawFragment reconstructs the fragment from its components
 func GetRawFragment(u *RawURL) string {
-	// xx
+	if u.Fragment == "" {
+		return ""
+	}
+	var buf strings.Builder
+	buf.WriteRune('#')
+	buf.WriteString(u.Fragment)
+	return buf.String()
 }
 
 // QueryValues returns a map of query parameters
@@ -129,22 +184,79 @@ GetFullRawURL reconstructs the full URL from its components
 		scheme         authority
 */
 func (u *RawURL) GetFullRawURL() string {
-	//..
+	var buf strings.Builder
+
+	// Scheme
+	if u.Scheme != "" {
+		buf.WriteString(u.Scheme)
+		buf.WriteString("://")
+	}
+
+	// Authority (userinfo + host)
+	buf.WriteString(GetRawAuthority(u))
+
+	// Path
+	buf.WriteString(GetRawPath(u))
+
+	// Query
+	if u.Query != "" {
+		buf.WriteRune('?')
+		buf.WriteString(u.Query)
+	}
+
+	// Fragment
+	if u.Fragment != "" {
+		buf.WriteRune('#')
+		buf.WriteString(u.Fragment)
+	}
+
+	return buf.String()
 }
 
-// ...
-// scheme://host/path
+// GetFullRawURI returns scheme://host/path
 func (u *RawURL) GetFullRawURI() string {
-	//..
-	return u.GetFullRawURL()
+	var buf strings.Builder
+
+	// Scheme
+	if u.Scheme != "" {
+		buf.WriteString(u.Scheme)
+		buf.WriteString("://")
+	}
+
+	// Authority
+	buf.WriteString(GetRawAuthority(u))
+
+	// Path
+	buf.WriteString(GetRawPath(u))
+
+	return buf.String()
 }
 
+// GetRawRelativeURI returns /path?query#fragment
 func (u *RawURL) GetRawRelativeURI() string {
-	//..
+	var buf strings.Builder
+
+	// Path
+	buf.WriteString(GetRawPath(u))
+
+	// Query
+	if u.Query != "" {
+		buf.WriteRune('?')
+		buf.WriteString(u.Query)
+	}
+
+	// Fragment
+	if u.Fragment != "" {
+		buf.WriteRune('#')
+		buf.WriteString(u.Fragment)
+	}
+
+	return buf.String()
 }
 
+// GetRawURIPath returns just the path component
 func (u *RawURL) GetRawURIPath() string {
-	//..
+	return GetRawPath(u)
 }
 
 // lastIndexRune returns the last index} of a rune in a string
