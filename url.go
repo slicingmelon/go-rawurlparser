@@ -23,6 +23,8 @@ type RawURL struct {
 	Path     string    // The path component, exactly as provided
 	Query    string    // The query string without the leading '?'
 	Fragment string    // The fragment without the leading '#'
+
+	rawPathUnsafe string // The path component, without the leading '/' // will be needed when fuzzing full paths
 }
 
 // Userinfo stores username and password info

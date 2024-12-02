@@ -10,6 +10,20 @@ import (
 
 // Helper methods //
 
+// URLComponent represents different parts of a URL that can be updated
+type URLComponent int
+
+const (
+	Scheme URLComponent = iota
+	Username
+	Password
+	Host
+	Port
+	Path
+	Query
+	Fragment
+)
+
 // FullString reconstructs the URL from its components
 func (u *RawURL) FullString() string {
 	var buf strings.Builder
@@ -78,6 +92,11 @@ func GetRawAuthority(u *RawURL) string {
 	}
 	buf.WriteString(u.Host)
 	return buf.String()
+}
+
+// GetRawHost reconstructs the host of the URL (with port)
+func GetRawHost(u *RawURL) string {
+	return u.Host
 }
 
 // GetRawHostname reconstructs the hostname of the URL (without port)
@@ -277,9 +296,44 @@ func lastIndexRune(s string, r rune) int {
 	return -1
 }
 
-// UpdateRawURL updates the URL with the given components
-func (u *RawURL) UpdateRawURL(....) {
-
+// UpdateRawURL updates a specific component of the URL with a new value
+func (u *RawURL) UpdateRawURL(component URLComponent, newValue string) {
+	switch component {
+	case Scheme:
+		u.Scheme = newValue
+	case Username:
+		if u.User == nil {
+			u.User = &Userinfo{}
+		}
+		u.User.username = newValue
+	case Password:
+		if u.User == nil {
+			u.User = &Userinfo{}
+		}
+		u.User.password = newValue
+		u.User.passwordSet = true
+	case Host:
+		// Update host without affecting port
+		if port := GetRawPort(u); port != "" {
+			u.Host = newValue + ":" + port
+		} else {
+			u.Host = newValue
+		}
+	case Port:
+		// Update port without affecting host
+		hostname := GetRawHostname(u)
+		if newValue != "" {
+			u.Host = hostname + ":" + newValue
+		} else {
+			u.Host = hostname
+		}
+	case Path:
+		u.Path = newValue
+	case Query:
+		u.Query = newValue
+	case Fragment:
+		u.Fragment = newValue
+	}
 }
 
 // GetAsciiHex returns hex value of ascii char
