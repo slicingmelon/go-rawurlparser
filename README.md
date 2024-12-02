@@ -39,13 +39,15 @@ All URLs are URIs, but not all URIs are URLs.
 
 # URL Structures
 
+[url-structure-and-scheme](./images/url-structure-and-scheme.jpg)
+
  - A URI is an identifier of a specific resource. Examples: Books, Documents
 
  - A URL is special type of identifier that also tells you how to access it. Examples: HTTP, FTP, MAILTO
 
 - If the protocol (https, ftp, etc.) is either present or implied for a domain, you should call it a URL—even though it’s also a URI. 
 
-![url-structure-and-scheme-2022](url-structure-and-scheme-2022.jpg)
+![full-uri-breakdown](./images/full-uri-breakdown.jpg)
 
 
 
