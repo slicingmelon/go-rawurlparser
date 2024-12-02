@@ -25,9 +25,6 @@ type RawURL struct {
 	Path     string    // The path component, exactly as provided
 	Query    string    // The query string without the leading '?'
 	Fragment string    // The fragment without the leading '#'
-
-	// will be needed when fuzzing full paths
-	rawPathUnsafe string // The path component, without the leading '/'
 }
 
 // ParseOptions contains configuration options for URL parsing
@@ -118,10 +115,6 @@ func RawURLParseWithOptions(rawURL string, opts *ParseOptions) (*RawURL, error) 
 	// Get path
 	if idx := strings.IndexRune(remaining, '/'); idx != -1 {
 		result.Path = remaining[idx:]
-		// Store rawPathUnsafe (path without leading /)
-		if len(result.Path) > 1 {
-			result.rawPathUnsafe = result.Path[1:]
-		}
 		remaining = remaining[:idx]
 	}
 

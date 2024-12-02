@@ -140,11 +140,11 @@ func TestMidPathPayloads(t *testing.T) {
 
 		// Compare with original
 		if parsed.Original != testURL {
-			fmt.Printf("%sFAILED - Payload: %s\nOriginal: %s\nStored:   %s\nPath: %s\nRawPathUnsafe: %s%s\n\n",
-				colorRed, payload, testURL, parsed.Original, parsed.Path, parsed.rawPathUnsafe, colorReset)
+			fmt.Printf("%sFAILED - Payload: %s\nOriginal: %s\nStored: %s\nPath: %s\nRawPathUnsafe: %s%s\n\n",
+				colorRed, payload, testURL, parsed.Original, parsed.Path, GetRawPathUnsafe(parsed), colorReset)
 		} else {
-			fmt.Printf("%sPASSED - Payload: %s\nOriginal: %s\nStored:   %s\nPath: %s\nRawPathUnsafe: %s%s\n\n",
-				colorGreen, payload, testURL, parsed.Original, parsed.Path, parsed.rawPathUnsafe, colorReset)
+			fmt.Printf("%sPASSED - Payload: %s\nOriginal: %s\nStored: %s\nPath: %s\nRawPathUnsafe: %s%s\n\n",
+				colorGreen, payload, testURL, parsed.Original, parsed.Path, GetRawPathUnsafe(parsed), colorReset)
 		}
 	}
 }

@@ -281,6 +281,30 @@ func (u *RawURL) GetRawRelativeURI() string {
 	return buf.String()
 }
 
+// GetRawRelativeURIUnsafe
+// Similar to GetRawRelativeURI but can omit leading slash '/' in path
+// GET badFormatURL/%0A/b/c HTTP/1.1
+func (u *RawURL) GetRawRelativeURIUnsafe() string {
+	var buf strings.Builder
+
+	// Path
+	buf.WriteString(GetRawPath(u))
+
+	// Query
+	if u.Query != "" {
+		buf.WriteRune('?')
+		buf.WriteString(u.Query)
+	}
+
+	// Fragment
+	if u.Fragment != "" {
+		buf.WriteRune('#')
+		buf.WriteString(u.Fragment)
+	}
+
+	return buf.String()
+}
+
 // GetRawURIPath returns just the path component
 func (u *RawURL) GetRawURIPath() string {
 	return GetRawPath(u)
