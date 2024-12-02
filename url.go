@@ -19,12 +19,20 @@ type RawURL struct {
 	Scheme   string    // The URL scheme (e.g., "http", "https")
 	Opaque   string    // For non-hierarchical URLs (e.g., mailto:user@example.com)
 	User     *Userinfo // username and password information
-	Host     string    // The host component
+	Host     string    // The host component (hostname + port)
+	Hostname string    // The hostname component
+	Port     string    // The port component
 	Path     string    // The path component, exactly as provided
 	Query    string    // The query string without the leading '?'
 	Fragment string    // The fragment without the leading '#'
 
 	rawPathUnsafe string // The path component, without the leading '/' // will be needed when fuzzing full paths
+}
+
+// ParseOptions contains configuration options for URL parsing
+type ParseOptions struct {
+	FallbackScheme     string // Default scheme if none provided
+	AllowMissingScheme bool   // If true, uses FallbackScheme when scheme is missing
 }
 
 // Userinfo stores username and password info
@@ -34,23 +42,17 @@ type Userinfo struct {
 	passwordSet bool
 }
 
-// String returns the original URL string
-func (u *RawURL) String() string {
-	return u.Original
-}
-
-// ParseOptions contains configuration options for URL parsing
-type ParseOptions struct {
-	FallbackScheme     string // Default scheme if none provided
-	AllowMissingScheme bool   // If true, uses FallbackScheme when scheme is missing
-}
-
 // DefaultOptions returns the default parsing options
 func DefaultOptions() *ParseOptions {
 	return &ParseOptions{
 		FallbackScheme:     "https",
 		AllowMissingScheme: true,
 	}
+}
+
+// String returns the original URL string
+func (u *RawURL) String() string {
+	return u.Original
 }
 
 // RawURLParseWithOptions parses URL with custom options

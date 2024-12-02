@@ -96,21 +96,28 @@ func GetRawAuthority(u *RawURL) string {
 
 // GetRawHost reconstructs the host of the URL (with port)
 func GetRawHost(u *RawURL) string {
-	return u.Host
+	var buf strings.Builder
+	buf.WriteString(u.Host)
+	return buf.String()
 }
 
 // GetRawHostname reconstructs the hostname of the URL (without port)
 func GetRawHostname(u *RawURL) string {
+	var buf strings.Builder
 	if i := strings.LastIndex(u.Host, ":"); i != -1 {
-		return u.Host[:i]
+		buf.WriteString(u.Host[:i])
+	} else {
+		buf.WriteString(u.Host)
 	}
-	return u.Host
+	return buf.String()
 }
 
 // GetRawPort reconstructs the port of the URL
 func GetRawPort(u *RawURL) string {
+	var buf strings.Builder
 	if i := strings.LastIndex(u.Host, ":"); i != -1 {
-		return u.Host[i+1:]
+		buf.WriteString(u.Host[i+1:])
+		return buf.String()
 	}
 	return ""
 }
