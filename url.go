@@ -37,8 +37,8 @@ func (u *RawURL) String() string {
 	return u.Original
 }
 
-// RawURLParseWithError is like RawURLParse but returns an error if URL is invalid
-func RawURLParseWithError(rawURL string) (*RawURL, error) {
+// RawURLParse returns an error if URL is invalid
+func RawURLParse(rawURL string) (*RawURL, error) {
 	if len(rawURL) == 0 {
 		return nil, errors.New("empty URL")
 	}
@@ -63,7 +63,7 @@ func RawURLParseWithError(rawURL string) (*RawURL, error) {
 	}
 
 	// Get userinfo if present
-	if idx := strings.Index(remaining, "@"); idx != -1 {
+	if idx := strings.IndexRune(remaining, '@'); idx != -1 {
 		userinfo := remaining[:idx]
 		remaining = remaining[idx+1:]
 
@@ -102,10 +102,4 @@ func RawURLParseWithError(rawURL string) (*RawURL, error) {
 	// What remains is the host
 	result.Host = remaining
 	return result, nil
-}
-
-// Keep the original function for backward compatibility
-func RawURLParse(rawURL string) *RawURL {
-	result, _ := RawURLParseWithError(rawURL)
-	return result
 }
