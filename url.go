@@ -37,8 +37,22 @@ func (u *RawURL) String() string {
 	return u.Original
 }
 
-// RawURLParse returns an error if URL is invalid
-func RawURLParse(rawURL string) (*RawURL, error) {
+// ParseOptions contains configuration options for URL parsing
+type ParseOptions struct {
+	FallbackScheme     string // Default scheme if none provided
+	AllowMissingScheme bool   // If true, uses FallbackScheme when scheme is missing
+}
+
+// DefaultOptions returns the default parsing options
+func DefaultOptions() *ParseOptions {
+	return &ParseOptions{
+		FallbackScheme:     "https",
+		AllowMissingScheme: true,
+	}
+}
+
+// RawURLParseWithOptions parses URL with custom options
+func RawURLParseWithOptions(rawURL string, opts *ParseOptions) (*RawURL, error) {
 	if len(rawURL) == 0 {
 		return nil, errors.New("empty URL")
 	}
@@ -58,6 +72,9 @@ func RawURLParse(rawURL string) (*RawURL, error) {
 		result.Scheme = remaining[:idx]
 		result.Opaque = remaining[idx+1:]
 		return result, nil
+	} else if opts != nil && opts.AllowMissingScheme {
+		// Apply fallback scheme
+		result.Scheme = opts.FallbackScheme
 	} else {
 		return nil, errors.New("missing scheme (e.g., http:// or https://)")
 	}
@@ -82,19 +99,19 @@ func RawURLParse(rawURL string) (*RawURL, error) {
 	}
 
 	// Get fragment
-	if idx := strings.Index(remaining, "#"); idx != -1 {
+	if idx := strings.IndexRune(remaining, '#'); idx != -1 {
 		result.Fragment = remaining[idx+1:]
 		remaining = remaining[:idx]
 	}
 
 	// Get query
-	if idx := strings.Index(remaining, "?"); idx != -1 {
+	if idx := strings.IndexRune(remaining, '?'); idx != -1 {
 		result.Query = remaining[idx+1:]
 		remaining = remaining[:idx]
 	}
 
 	// Get path
-	if idx := strings.Index(remaining, "/"); idx != -1 {
+	if idx := strings.IndexRune(remaining, '/'); idx != -1 {
 		result.Path = remaining[idx:]
 		remaining = remaining[:idx]
 	}
@@ -102,4 +119,14 @@ func RawURLParse(rawURL string) (*RawURL, error) {
 	// What remains is the host
 	result.Host = remaining
 	return result, nil
+}
+
+// RawURLParse uses default options - core function
+func RawURLParse(rawURL string) (*RawURL, error) {
+	return RawURLParseWithOptions(rawURL, DefaultOptions())
+}
+
+// RawURLParseStrict parses without fallback scheme
+func RawURLParseStrict(rawURL string) (*RawURL, error) {
+	return RawURLParseWithOptions(rawURL, nil)
 }
