@@ -1,6 +1,9 @@
 package rawurlparser
 
 import (
+	"bytes"
+	"encoding/hex"
+	"strconv"
 	"strings"
 	"unicode/utf8"
 )
@@ -80,11 +83,13 @@ func GetRawPath(u *RawURL) string {
 	// xx
 }
 
-// GetRawPath reconstructs the path from its components
-// Similar to GetRawPath but can omit first / in path
+// GetRawPathUnsafe reconstructs the path from its components
+// Similar to GetRawPath but will omit first / in path
 func GetRawPathUnsafe(u *RawURL) string {
 	// xx
 }
+
+// GetRawQuery reconstructs the query from its components
 func GetRawQuery(u *RawURL) string {
 	// xx
 }
@@ -112,13 +117,9 @@ func (u *RawURL) GetRawQueryValues() map[string][]string {
 	return values
 }
 
-// ...
-// scheme://host/path
-func (u *RawURL) GetFullRawURI() string {
-	//..
-}
-
 /*
+GetFullRawURL reconstructs the full URL from its components
+
 --->  scheme://host/path?query#fragment
 
 	             userinfo      host       port		path		       query		     fragment
@@ -130,6 +131,14 @@ func (u *RawURL) GetFullRawURI() string {
 func (u *RawURL) GetFullRawURL() string {
 	//..
 }
+
+// ...
+// scheme://host/path
+func (u *RawURL) GetFullRawURI() string {
+	//..
+	return u.GetFullRawURL()
+}
+
 func (u *RawURL) GetRawRelativeURI() string {
 	//..
 }
@@ -154,4 +163,40 @@ func lastIndexRune(s string, r rune) int {
 		i -= size
 	}
 	return -1
+}
+
+// GetAsciiHex returns hex value of ascii char
+func GetAsciiHex(r rune) string {
+	val := strconv.FormatInt(int64(r), 16)
+	if len(val) == 1 {
+		// append 0 formatInt skips it by default
+		val = "0" + val
+	}
+	return strings.ToUpper(val)
+}
+
+// GetUTF8Hex returns hex value of utf-8 non-ascii char
+func GetUTF8Hex(r rune) string {
+	// Percent Encoding is only done in hexadecimal values and in ASCII Range only
+	// other UTF-8 chars (chinese etc) can be used by utf-8 encoding and byte conversion
+	// let golang do utf-8 encoding of rune
+	var buff bytes.Buffer
+	utfchar := string(r)
+	hexencstr := hex.EncodeToString([]byte(utfchar))
+	for k, v := range hexencstr {
+		if k != 0 && k%2 == 0 {
+			buff.WriteRune('%')
+		}
+		buff.WriteRune(v)
+	}
+	return buff.String()
+}
+
+// GetRuneMap returns a map of runes
+func GetRuneMap(runes []rune) map[rune]struct{} {
+	x := map[rune]struct{}{}
+	for _, v := range runes {
+		x[v] = struct{}{}
+	}
+	return x
 }
