@@ -2,6 +2,7 @@ package rawurlparser
 
 import (
 	"strings"
+	"unicode/utf8"
 )
 
 // Helper methods //
@@ -18,26 +19,58 @@ func (u *RawURL) FullString() string {
 	if u.User != nil {
 		buf.WriteString(u.User.username)
 		if u.User.passwordSet {
-			buf.WriteByte(':')
+			buf.WriteRune(':')
 			buf.WriteString(u.User.password)
 		}
-		buf.WriteByte('@')
+		buf.WriteRune('@')
 	}
 
 	buf.WriteString(u.Host)
 	buf.WriteString(u.Path)
 
 	if u.Query != "" {
-		buf.WriteByte('?')
+		buf.WriteRune('?')
 		buf.WriteString(u.Query)
 	}
 
 	if u.Fragment != "" {
-		buf.WriteByte('#')
+		buf.WriteRune('#')
 		buf.WriteString(u.Fragment)
 	}
 
 	return buf.String()
+}
+
+// ...
+// https://media.beehiiv.com/cdn-cgi/image/fit=scale-down,format=auto,onerror=redirect,quality=80/uploads/asset/file/fac6de4c-8a4f-4688-aa43-0fbcf784426e/url-structure-and-scheme-2022.png
+func (u *RawURL) GetFullRawURI() string {
+	//..
+}
+
+func (u *RawURL) GetRawRelativeURI() string {
+	//..
+}
+
+func (u *RawURL) GetRawURIPath() string {
+	//..
+}
+
+// lastIndexRune returns the last index} of a rune in a string
+func lastIndexRune(s string, r rune) int {
+	// Fast path for ASCII
+	if r < utf8.RuneSelf {
+		return strings.LastIndex(s, string(r))
+	}
+
+	// For non-ASCII runes, we need to scan backwards
+	for i := len(s); i > 0; {
+		r1, size := utf8.DecodeLastRuneInString(s[:i])
+		if r1 == r {
+			return i - size
+		}
+		i -= size
+	}
+	return -1
 }
 
 // Port returns the port of the URL
@@ -56,6 +89,7 @@ func (u *RawURL) Hostname() string {
 	return u.Host
 }
 
+// QueryValues returns a map of query parameters
 func (u *RawURL) QueryValues() map[string][]string {
 	values := make(map[string][]string)
 	for _, pair := range strings.Split(u.Query, "&") {

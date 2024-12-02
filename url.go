@@ -85,7 +85,7 @@ func RawURLParseWithOptions(rawURL string, opts *ParseOptions) (*RawURL, error) 
 		remaining = remaining[idx+1:]
 
 		// Split username and password
-		if pwIdx := strings.Index(userinfo, ":"); pwIdx != -1 {
+		if pwIdx := strings.IndexRune(userinfo, ':'); pwIdx != -1 {
 			result.User = &Userinfo{
 				username:    userinfo[:pwIdx],
 				password:    userinfo[pwIdx+1:],
@@ -126,7 +126,7 @@ func RawURLParse(rawURL string) (*RawURL, error) {
 	return RawURLParseWithOptions(rawURL, DefaultOptions())
 }
 
-// RawURLParseStrict parses without fallback scheme
-func RawURLParseStrict(rawURL string) (*RawURL, error) {
+// RawURLParseStrictScheme parses without fallback scheme
+func RawURLParseStrictScheme(rawURL string) (*RawURL, error) {
 	return RawURLParseWithOptions(rawURL, nil)
 }
