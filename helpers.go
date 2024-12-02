@@ -22,6 +22,7 @@ const (
 	Path
 	Query
 	Fragment
+	RawURI
 )
 
 // FullString reconstructs the URL from its components
@@ -200,7 +201,7 @@ func (u *RawURL) GetRawQueryValues() map[string][]string {
 }
 
 /*
-GetFullRawURL reconstructs the full URL from its components
+GetRawFullURL reconstructs the full URL from its components
 
 --->  scheme://host/path?query#fragment
 
@@ -210,7 +211,7 @@ GetFullRawURL reconstructs the full URL from its components
 		|----|  |---------------------------|
 		scheme         authority
 */
-func (u *RawURL) GetFullRawURL() string {
+func (u *RawURL) GetRawFullURL() string {
 	var buf strings.Builder
 
 	// Scheme
@@ -240,92 +241,49 @@ func (u *RawURL) GetFullRawURL() string {
 	return buf.String()
 }
 
-// GetFullRawURI returns scheme://host/path
-func (u *RawURL) GetFullRawURI() string {
+// GetRawRequestURI returns the exact URI as it would appear in an HTTP request line
+// It could be "//a/b/c../;/?x=test", "\\a\\bb\\..\\test//..//..//users.json", "@collaboratorhost", etc
+func (u *RawURL) GetRawRequestURI() string {
+	if u.RawRequestURI != "" {
+		return u.RawRequestURI
+	}
+
 	var buf strings.Builder
 
-	// Scheme
+	// If no custom RawRequestURI is set, construct from Path
+	if u.Path != "" {
+		buf.WriteString(u.Path)
+	}
+
+	// Add query if present
+	if u.Query != "" {
+		buf.WriteRune('?')
+		buf.WriteString(u.Query)
+	}
+
+	// Add fragment if present
+	if u.Fragment != "" {
+		buf.WriteRune('#')
+		buf.WriteString(u.Fragment)
+	}
+
+	return buf.String()
+}
+
+// GetAbsoluteURI returns the full URI including scheme and host
+// Example: "http://example.com/path?query#fragment"
+func (u *RawURL) GetRawAbsoluteURI() string {
+	var buf strings.Builder
+
 	if u.Scheme != "" {
 		buf.WriteString(u.Scheme)
 		buf.WriteString("://")
 	}
 
-	// Authority
 	buf.WriteString(GetRawAuthority(u))
-
-	// Path
-	buf.WriteString(GetRawPath(u))
+	buf.WriteString(u.GetRawRequestURI())
 
 	return buf.String()
-}
-
-// GetRawRelativeURI returns /path?query#fragment
-func (u *RawURL) GetRawRelativeURI() string {
-	var buf strings.Builder
-
-	// Path
-	buf.WriteString(GetRawPath(u))
-
-	// Query
-	if u.Query != "" {
-		buf.WriteRune('?')
-		buf.WriteString(u.Query)
-	}
-
-	// Fragment
-	if u.Fragment != "" {
-		buf.WriteRune('#')
-		buf.WriteString(u.Fragment)
-	}
-
-	return buf.String()
-}
-
-// GetRawRelativeURIUnsafe
-// Similar to GetRawRelativeURI but can omit leading slash '/' in path
-// GET badFormatURL/%0A/b/c HTTP/1.1
-func (u *RawURL) GetRawRelativeURIUnsafe() string {
-	var buf strings.Builder
-
-	// Path
-	buf.WriteString(GetRawPath(u))
-
-	// Query
-	if u.Query != "" {
-		buf.WriteRune('?')
-		buf.WriteString(u.Query)
-	}
-
-	// Fragment
-	if u.Fragment != "" {
-		buf.WriteRune('#')
-		buf.WriteString(u.Fragment)
-	}
-
-	return buf.String()
-}
-
-// GetRawURIPath returns just the path component
-func (u *RawURL) GetRawURIPath() string {
-	return GetRawPath(u)
-}
-
-// lastIndexRune returns the last index} of a rune in a string
-func lastIndexRune(s string, r rune) int {
-	// Fast path for ASCII
-	if r < utf8.RuneSelf {
-		return strings.LastIndex(s, string(r))
-	}
-
-	// For non-ASCII runes, we need to scan backwards
-	for i := len(s); i > 0; {
-		r1, size := utf8.DecodeLastRuneInString(s[:i])
-		if r1 == r {
-			return i - size
-		}
-		i -= size
-	}
-	return -1
 }
 
 // UpdateRawURL updates a specific component of the URL with a new value
@@ -361,11 +319,23 @@ func (u *RawURL) UpdateRawURL(component URLComponent, newValue string) {
 		}
 	case Path:
 		u.Path = newValue
+		u.RawRequestURI = "" // Clear any custom raw URI when updating path
 	case Query:
 		u.Query = newValue
+		u.RawRequestURI = "" // Clear any custom raw URI when updating query
 	case Fragment:
 		u.Fragment = newValue
+		u.RawRequestURI = "" // Clear any custom raw URI when updating fragment
+	case RawURI:
+		u.RawRequestURI = newValue // Same as SetRawRequestURI
 	}
+}
+
+// SetRawRequestURI allows setting a custom request URI
+// This is useful for fuzzing/testing with non-standard URIs
+// It's equivalent to UpdateRawURL(RawURI, uri)
+func (u *RawURL) SetRawRequestURI(uri string) {
+	u.UpdateRawURL(RawURI, uri)
 }
 
 // GetAsciiHex returns hex value of ascii char
@@ -393,6 +363,24 @@ func GetUTF8Hex(r rune) string {
 		buff.WriteRune(v)
 	}
 	return buff.String()
+}
+
+// lastIndexRune returns the last index} of a rune in a string
+func lastIndexRune(s string, r rune) int {
+	// Fast path for ASCII
+	if r < utf8.RuneSelf {
+		return strings.LastIndex(s, string(r))
+	}
+
+	// For non-ASCII runes, we need to scan backwards
+	for i := len(s); i > 0; {
+		r1, size := utf8.DecodeLastRuneInString(s[:i])
+		if r1 == r {
+			return i - size
+		}
+		i -= size
+	}
+	return -1
 }
 
 // GetRuneMap returns a map of runes

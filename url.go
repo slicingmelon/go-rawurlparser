@@ -12,7 +12,7 @@ import (
 )
 
 // RawURL represents a raw URL with no normalization or encoding.
-// It preserves the exact format of the original URL string,
+// It preserves the exact format of the original URL string
 // including any percent-encoding, special characters, unicode chars, etc.
 type RawURL struct {
 	Original string    // The original, unmodified URL string
@@ -25,6 +25,9 @@ type RawURL struct {
 	Path     string    // The path component, exactly as provided
 	Query    string    // The query string without the leading '?'
 	Fragment string    // The fragment without the leading '#'
+
+	//other stuff
+	RawRequestURI string // The exact URI as it appears in HTTP request line (will be needed to store fuzzed paths,payloads,etc)
 }
 
 // ParseOptions contains configuration options for URL parsing

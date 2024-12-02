@@ -70,33 +70,33 @@ func TestRawURLParse(t *testing.T) {
 
 	for _, url := range urls {
 		t.Run(url, func(t *testing.T) {
-			parsed, err := RawURLParse(url)
+			parsedURL, err := RawURLParse(url)
 			if err != nil {
 				t.Errorf("Error parsing URL: %s", err)
 				return
 			}
 
 			// Compare with original instead of reconstructing
-			if parsed.Original != url {
+			if parsedURL.Original != url {
 				fmt.Printf("%sURL mismatch:\nOriginal: %s\nStored:   %s%s\n",
-					colorRed, url, parsed.Original, colorReset)
+					colorRed, url, parsedURL.Original, colorReset)
 			}
 
 			fmt.Printf("\nTesting URL: %s\n", url)
-			fmt.Printf("Scheme: %s\n", parsed.Scheme)
-			fmt.Printf("Host: %s\n", parsed.Host)
-			fmt.Printf("Path: %s\n", parsed.Path)
-			if parsed.User != nil {
-				fmt.Printf("Username: %s\n", parsed.User.username)
-				if parsed.User.passwordSet {
-					fmt.Printf("Password: %s\n", parsed.User.password)
+			fmt.Printf("Parsed Scheme: %s\n", parsedURL.Scheme)
+			fmt.Printf("Parsed Host: %s\n", parsedURL.Host)
+			fmt.Printf("Parsed Path: %s\n", parsedURL.Path)
+			if parsedURL.User != nil {
+				fmt.Printf("Parsed Username: %s\n", parsedURL.User.username)
+				if parsedURL.User.passwordSet {
+					fmt.Printf("Parsed Password: %s\n", parsedURL.User.password)
 				}
 			}
-			if parsed.Opaque != "" {
-				fmt.Printf("Opaque: %s\n", parsed.Opaque)
+			if parsedURL.Opaque != "" {
+				fmt.Printf("Parsed Opaque: %s\n", parsedURL.Opaque)
 			}
-			fmt.Printf("Query: %s\n", parsed.Query)
-			fmt.Printf("Fragment: %s\n", parsed.Fragment)
+			fmt.Printf("Parsed Query: %s\n", parsedURL.Query)
+			fmt.Printf("Parsed Fragment: %s\n", parsedURL.Fragment)
 			fmt.Println("---")
 		})
 	}
@@ -104,18 +104,18 @@ func TestRawURLParse(t *testing.T) {
 
 func TestURLHelperMethods(t *testing.T) {
 	url := "https://www.example.com:8080/path?key=value&foo=bar"
-	parsed, err := RawURLParse(url)
+	parsedURL, err := RawURLParse(url)
 	if err != nil {
 		t.Fatalf("Failed to parse URL: %v", err)
 	}
 
-	port := GetRawPort(parsed)
-	hostname := GetRawHostname(parsed)
-	params := parsed.GetRawQueryValues()
+	port := GetRawPort(parsedURL)
+	hostname := GetRawHostname(parsedURL)
+	params := parsedURL.GetRawQueryValues()
 
-	fmt.Printf("Port: %s\n", port)
-	fmt.Printf("Hostname: %s\n", hostname)
-	fmt.Printf("Params: %v\n", params)
+	fmt.Printf("Parsed Port: %s\n", port)
+	fmt.Printf("Parsed Hostname: %s\n", hostname)
+	fmt.Printf("Parsed Params: %v\n", params)
 }
 
 func TestMidPathPayloads(t *testing.T) {
@@ -132,19 +132,19 @@ func TestMidPathPayloads(t *testing.T) {
 		// Create test URL by combining base URL and payload
 		testURL := baseURL + payload
 
-		parsed, err := RawURLParse(testURL)
+		parsedURL, err := RawURLParse(testURL)
 		if err != nil {
 			t.Errorf("Error parsing URL with payload %q: %s", payload, err)
 			continue
 		}
 
 		// Compare with original
-		if parsed.Original != testURL {
+		if parsedURL.Original != testURL {
 			fmt.Printf("%sFAILED - Payload: %s\nOriginal: %s\nStored: %s\nPath: %s\nRawPathUnsafe: %s%s\n\n",
-				colorRed, payload, testURL, parsed.Original, parsed.Path, GetRawPathUnsafe(parsed), colorReset)
+				colorRed, payload, testURL, parsedURL.Original, parsedURL.Path, GetRawPathUnsafe(parsedURL), colorReset)
 		} else {
 			fmt.Printf("%sPASSED - Payload: %s\nOriginal: %s\nStored: %s\nPath: %s\nRawPathUnsafe: %s%s\n\n",
-				colorGreen, payload, testURL, parsed.Original, parsed.Path, GetRawPathUnsafe(parsed), colorReset)
+				colorGreen, payload, testURL, parsedURL.Original, parsedURL.Path, GetRawPathUnsafe(parsedURL), colorReset)
 		}
 	}
 }
