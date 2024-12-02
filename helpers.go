@@ -177,9 +177,9 @@ GetFullRawURL reconstructs the full URL from its components
 
 --->  scheme://host/path?query#fragment
 
-	             userinfo      host       port		path		       query		     fragment
-	            |------ ||--------------||---||--------------||-------------------------||---|
-		https://john.doe@www.example.com:123/forum/questions/?tag=networking&order=newest#top
+	             userinfo      host      port    path		       query		            fragment
+	            |------| |-------------| |--||---------------| |-------------------------| |-----------|
+		https://john.doe@www.example.com:8092/forum/questions/?tag=networking&order=newest#fragmentation
 		|----|  |---------------------------|
 		scheme         authority
 */
@@ -275,6 +275,11 @@ func lastIndexRune(s string, r rune) int {
 		i -= size
 	}
 	return -1
+}
+
+// UpdateRawURL updates the URL with the given components
+func (u *RawURL) UpdateRawURL(....) {
+
 }
 
 // GetAsciiHex returns hex value of ascii char
