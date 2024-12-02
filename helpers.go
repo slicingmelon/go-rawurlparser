@@ -25,6 +25,7 @@ const (
 )
 
 // FullString reconstructs the URL from its components
+// deprecated
 func (u *RawURL) FullString() string {
 	var buf strings.Builder
 

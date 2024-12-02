@@ -13,7 +13,7 @@ import (
 
 // RawURL represents a raw URL with no normalization or encoding.
 // It preserves the exact format of the original URL string,
-// including any percent-encoding or special characters.
+// including any percent-encoding, special characters, unicode chars, etc.
 type RawURL struct {
 	Original string    // The original, unmodified URL string
 	Scheme   string    // The URL scheme (e.g., "http", "https")
@@ -26,7 +26,8 @@ type RawURL struct {
 	Query    string    // The query string without the leading '?'
 	Fragment string    // The fragment without the leading '#'
 
-	rawPathUnsafe string // The path component, without the leading '/' // will be needed when fuzzing full paths
+	// will be needed when fuzzing full paths
+	rawPathUnsafe string // The path component, without the leading '/'
 }
 
 // ParseOptions contains configuration options for URL parsing
@@ -117,11 +118,25 @@ func RawURLParseWithOptions(rawURL string, opts *ParseOptions) (*RawURL, error) 
 	// Get path
 	if idx := strings.IndexRune(remaining, '/'); idx != -1 {
 		result.Path = remaining[idx:]
+		// Store rawPathUnsafe (path without leading /)
+		if len(result.Path) > 1 {
+			result.rawPathUnsafe = result.Path[1:]
+		}
 		remaining = remaining[:idx]
 	}
 
 	// What remains is the host
 	result.Host = remaining
+
+	// Parse hostname and port from host
+	if idx := strings.LastIndex(result.Host, ":"); idx != -1 {
+		result.Hostname = result.Host[:idx]
+		result.Port = result.Host[idx+1:]
+	} else {
+		result.Hostname = result.Host
+		result.Port = ""
+	}
+
 	return result, nil
 }
 
