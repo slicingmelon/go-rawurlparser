@@ -39,7 +39,7 @@ All URLs are URIs, but not all URIs are URLs.
 
 # URL Structures
 
-[url-structure-and-scheme](./images/url-structure-and-scheme.jpg)
+![url-structure-and-scheme](./images/url-structure-and-scheme.jpg)
 
  - A URI is an identifier of a specific resource. Examples: Books, Documents
 
