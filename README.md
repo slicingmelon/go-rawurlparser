@@ -25,7 +25,7 @@ the raw path should be assigned to URL.Opaque to prevent normalization.
 
 # Understanding URL/URI 
 
-URIs, URLs, and URNs
+URI (Uniform Resource Identifier), URL (Uniform Resource Locator), and URN (Uniform Resource Name) explained with examples. 
 
 - A Uniform Resource Identifier (URI) is a string of characters that uniquely identify a name or a resource on the internet. A URI identifies a resource by name, location, or both. URIs have two specializations known as Uniform Resource Locator (URL), and Uniform Resource Name (URN).
 
@@ -37,7 +37,7 @@ URIs, URLs, and URNs
 
 All URLs are URIs, but not all URIs are URLs.
 
-# URL Structures
+## URL Structures
 
 ![url-structure-and-scheme](./images/url-structure-and-scheme.jpg)
 
@@ -49,7 +49,11 @@ All URLs are URIs, but not all URIs are URLs.
 
 ![full-uri-breakdown](./images/full-uri-breakdown.jpg)
 
+ Schemes can include: HTTP, HTTPS, FTP, MAILTO, IRC, FILE, etc. HTTP and HTTPS are usually used to reach internet resources, but they can point to local (on-network or on-computer) resources as well.
 
+The FILE scheme refers to a file located on the local computer, and it looks for the file at the path that’s provided. The host can also include a port designation that overrides the default port for the specified protocol
+
+Credits: https://danielmiessler.com/p/difference-between-uri-url/
 
 ## Important Notice
 
