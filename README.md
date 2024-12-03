@@ -21,6 +21,40 @@ the raw path should be assigned to URL.Opaque to prevent normalization.
 - Helper methods for port, hostname, and query parsing
 - Optional error handling with RawURLParseWithError
 
+
+
+# Understanding URL/URI 
+
+URI (Uniform Resource Identifier), URL (Uniform Resource Locator), and URN (Uniform Resource Name) explained with examples. 
+
+- A Uniform Resource Identifier (URI) is a string of characters that uniquely identify a name or a resource on the internet. A URI identifies a resource by name, location, or both. URIs have two specializations known as Uniform Resource Locator (URL), and Uniform Resource Name (URN).
+
+-  A Uniform Resource Locator (URL) is a type of URI that specifies not only a resource, but how to reach it on the internet—like http://, ftp://, or mailto://.
+
+- A Uniform Resource Name (URN) is a type of URI that uses the specific naming scheme of urn:—like urn:isbn:0-486-27557-4 or urn:isbn:0-395-36341-1.
+
+- So a URI or URN is like your name, and a URL is a specific subtype of URI that’s like your name combined with your address. 
+
+All URLs are URIs, but not all URIs are URLs.
+
+## URL Structures
+
+![url-structure-and-scheme](./images/url-structure-and-scheme.jpg)
+
+ - A URI is an identifier of a specific resource. Examples: Books, Documents
+
+ - A URL is special type of identifier that also tells you how to access it. Examples: HTTP, FTP, MAILTO
+
+- If the protocol (https, ftp, etc.) is either present or implied for a domain, you should call it a URL—even though it’s also a URI. 
+
+![full-uri-breakdown](./images/full-uri-breakdown.jpg)
+
+ Schemes can include: HTTP, HTTPS, FTP, MAILTO, IRC, FILE, etc. HTTP and HTTPS are usually used to reach internet resources, but they can point to local (on-network or on-computer) resources as well.
+
+The FILE scheme refers to a file located on the local computer, and it looks for the file at the path that’s provided. The host can also include a port designation that overrides the default port for the specified protocol
+
+Credits: https://danielmiessler.com/p/difference-between-uri-url/
+
 ## Important Notice
 
 ### Go's http.Client
@@ -57,6 +91,7 @@ log.Printf("Debug - Request Components - Scheme: %s, Host: %s, Path: %s, RawPath
     req.URL.Opaque,
 )
 ```
+
 
 ## Installation
 
