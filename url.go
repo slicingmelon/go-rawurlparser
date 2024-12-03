@@ -51,9 +51,9 @@ func DefaultOptions() *ParseOptions {
 	}
 }
 
-// String returns the original URL string
+// String returns the Full URL string
 func (u *RawURL) String() string {
-	return u.Original
+	return u.GetRawFullURL()
 }
 
 // RawURLParseWithOptions parses URL with custom options

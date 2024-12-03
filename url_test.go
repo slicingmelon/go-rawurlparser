@@ -119,7 +119,7 @@ func TestURLHelperMethods(t *testing.T) {
 }
 
 func TestMidPathPayloads(t *testing.T) {
-	baseURL := "https://test-go-bypass-403.new.com"
+	baseURL := "https://test-go-bypass-403-new.com"
 	payloads, err := readPayloads("data/mid_paths_payloads.txt")
 	if err != nil {
 		t.Fatalf("Failed to read payloads: %v", err)
@@ -138,13 +138,21 @@ func TestMidPathPayloads(t *testing.T) {
 			continue
 		}
 
+		parsedUrlForComparison := fmt.Sprintf("%s://%s%s", parsedURL.Scheme, parsedURL.Host, parsedURL.Path)
+		if parsedURL.Query != "" {
+			parsedUrlForComparison += "?" + parsedURL.Query
+		}
+		if parsedURL.Fragment != "" {
+			parsedUrlForComparison += "#" + parsedURL.Fragment
+		}
+
 		// Compare with original
-		if parsedURL.Original != testURL {
-			fmt.Printf("%sFAILED - Payload: %s\nOriginal: %s\nStored: %s\nPath: %s\nRawPathUnsafe: %s%s\n\n",
-				colorRed, payload, testURL, parsedURL.Original, parsedURL.Path, GetRawPathUnsafe(parsedURL), colorReset)
+		if parsedUrlForComparison != testURL {
+			fmt.Printf("%sFAILED - Payload: %s\ntestURL: %s\nScheme: %s\nHost: %s\nPath: %s\nQuery: %s\nFragment: %s%s\n\n",
+				colorRed, payload, testURL, parsedURL.Scheme, parsedURL.Host, parsedURL.Path, parsedURL.Query, parsedURL.Fragment, colorReset)
 		} else {
-			fmt.Printf("%sPASSED - Payload: %s\nOriginal: %s\nStored: %s\nPath: %s\nRawPathUnsafe: %s%s\n\n",
-				colorGreen, payload, testURL, parsedURL.Original, parsedURL.Path, GetRawPathUnsafe(parsedURL), colorReset)
+			fmt.Printf("%sPASSED - Payload: %s\ntestURL: %s\nScheme: %s\nHost: %s\nPath: %s\nQuery: %s\nFragment: %s%s\n\n",
+				colorGreen, payload, testURL, parsedURL.Scheme, parsedURL.Host, parsedURL.Path, parsedURL.Query, parsedURL.Fragment, colorReset)
 		}
 	}
 }
