@@ -1,4 +1,4 @@
-# RawURLParse
+# RawURLParser
 
 A Go package that parses URLs in their raw form.
 
@@ -19,7 +19,6 @@ the raw path should be assigned to URL.Opaque to prevent normalization.
 - Raw preservation of special characters
 - Simple and fast parsing
 - Helper methods for port, hostname, and query parsing
-- Optional error handling with RawURLParseWithError
 
 
 
@@ -57,41 +56,66 @@ Credits: https://danielmiessler.com/p/difference-between-uri-url/
 
 ## Important Notice
 
-### Go's http.Client
-When using parsed URLs with Go's `http.Client`, you'll need to use URL.Opaque to preserve
-the exact path encoding, otherwise http.Client will perform encodings, normalization, etc. 
+### Go's http.Client and Raw URLs
 
-Example Code to preserve and send raw URLs
+RawURLParser does not return a net/url.URL structure by design. For maximum compatibility with raw URL paths and special characters, it is recommended to use a custom HTTP client that handles raw URL strings directly.
+
+However, if you need to work with Go's standard http.Client, here are some workarounds to preserve raw paths:
+
+#### Workaround 1: Using URL.Opaque 
+```go
+// Create new request
+req, err := http.NewRequestWithContext(ctx, "GET", rawURL, nil)
+if err != nil {
+    return err
+}
+
+// Parse the raw URL
+parsedURL, err := rawurlparser.RawURLParse(rawURL)
+if err != nil {
+    return err
+}
+
+// Set the Host header explicitly
+req.Host = parsedURL.Host
+
+// Set the entire URL as Opaque to prevent normalization
+req.URL.Opaque = rawURL
+```
+
+> Note: This approach will send the full URL (including scheme://host) in the request path. While valid in HTTP/1.1, this is not recommended as some web servers might not handle it correctly.
+
+> Also note that it might not be sufficient to just use core Go to create a new request, I recommend to create a helper function that will clone the HTTP request struct, set the basic stuff and then set the Raw URL string to the Opaque field.
+
+
+#### Workaround 2: Using a Proxy (Better)
+To avoid sending full URLs in the request path, another approach is to proxy these requests through a local proxy that will:
+1. Receive the full URL in the path
+2. Extract just the path component
+3. Forward the request with the correct raw path
 
 ```go
-parsedURL := rawurlparser.RawURLParse(rawURL)
-req := &http.Request{
-    Method: "GET",
-    URL: &url.URL{
-        Scheme: parsedURL.Scheme,
-        Host:   parsedURL.Host,
-        Opaque: parsedURL.Path,  // Use Opaque to prevent path normalization
+// Example proxy configuration
+// use url.Parse only to parse the proxy URL, not the target/input URL.
+proxyURL, _ := url.Parse("http://localhost:8080")
+client := &http.Client{
+    Transport: &http.Transport{
+        Proxy: http.ProxyURL(proxyURL),
     },
 }
+
+
+// now add the rest of the code from workaround 1
 ```
 
-In other words, this achieves the same thing as sending a request with curl using `--path-as-is`
 
-### Other Problematic Methods
+### Recommended Approach
+The recommended approach is to use a custom HTTP client that:
+- Builds raw HTTP requests from scratch
+- Sends them without any normalization or encoding
+- Preserves exact path formatting
 
-I found that Go's `to.String()` also applies encodings, do not use it on URLs or when debugging URLs.
-
-Use something like this:
-```go
-log.Printf("Debug - Request Components - Scheme: %s, Host: %s, Path: %s, RawPath: %s, Opaque: %s",
-    req.URL.Scheme,
-    req.URL.Host,
-    req.URL.Path,
-    req.URL.RawPath,
-    req.URL.Opaque,
-)
-```
-
+Tips and examples for building such a client will be documented in this repository.
 
 ## Installation
 
@@ -111,40 +135,37 @@ import (
 
 func main() {
     url := "https://example.com/path1/..%2f/test?q=1#fragment"
-    parsed := rawurlparser.RawURLParse(url)
+    parsedUrl, err := rawurlparser.RawURLParse(url)
+    if err != nil {
+        log.Errorf("Invalid URL: %s", err)
+    }
     
-    fmt.Printf("Scheme:   %q\n", parsed.Scheme)
-    fmt.Printf("Host:     %q\n", parsed.Host)
-    fmt.Printf("Path:     %q\n", parsed.Path)
-    fmt.Printf("Query:    %q\n", parsed.Query)
-    fmt.Printf("Fragment: %q\n", parsed.Fragment)
+    fmt.Printf("Scheme:   %s\n", parsedUrl.Scheme)
+    fmt.Printf("Host:     %s\n", parsedUrl.Host)
+    fmt.Printf("Port:     %s\n", parsedUrl.Port)
+    fmt.Printf("Path:     %s\n", parsedUrl.Path)
+    fmt.Printf("Query:    %s\n", parsedUrl.Query)
+    fmt.Printf("Fragment: %s\n", parsedUrl.Fragment)
 }
 ```
 
 ## Helper Methods
 
-The URL struct provides several helper methods:
+The pkg provides several helper methods:
 
-- `Port()` - Returns the port number from the host if present
-- `Hostname()` - Returns the hostname without the port
-- `QueryValues()` - Parses query string into a map[string][]string
-- `FullString()` - Reconstructs the full URL from its components
+- `GetRawFullURL()` - Reconstructs the full URL from its components
+- `GetRawRequestURI()` - Returns the exact URI as it would appear in an HTTP request line
+- `GetRawAbsoluteURI()` - Returns the full URI including scheme and host
+- `GetRawPort()` - Returns the port number from the host if present
+- `GetRawHostname()` - Returns the hostname (without the port)
+- `GetRawQueryValues()` - Parses query string into a map[string][]string
+- `UpdateRawURL()` - Updates a specific component of the URL with a new value
+- `GetRawPath()` - Returns the path component of the URL
 
 ## Error Handling
 
-The package provides two parsing functions:
+I don't particularly like errors. 
 
-- `RawURLParse()` - Returns a URL struct or nil if error
-- `RawURLParseWithError()` - Returns a URL struct or an error
-
-Example with error handling:
-
-```go
-url, err := RawURLParseWithError("example.com/path")
-if err != nil {
-    log.Fatal("Invalid URL:", err) // Will error: missing scheme
-}
-```
 
 ## Tests
 

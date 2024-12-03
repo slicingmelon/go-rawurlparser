@@ -129,12 +129,31 @@ func TestMidPathPayloads(t *testing.T) {
 	fmt.Println("----------------------------------------")
 
 	for _, payload := range payloads {
+		// Ensure payload starts with / if it doesn't already
+		if !strings.HasPrefix(payload, "/") {
+			payload = "/" + payload
+		}
+
 		// Create test URL by combining base URL and payload
 		testURL := baseURL + payload
 
 		parsedURL, err := RawURLParse(testURL)
 		if err != nil {
 			t.Errorf("Error parsing URL with payload %q: %s", payload, err)
+			continue
+		}
+
+		// Verify the payload is in the path, not the host
+		if strings.Contains(parsedURL.Host, payload) {
+			t.Errorf("%sFAILED - Payload incorrectly parsed as part of host:\nPayload: %s\nHost: %s%s\n",
+				colorRed, payload, parsedURL.Host, colorReset)
+			continue
+		}
+
+		// Verify the path contains the payload
+		if !strings.Contains(parsedURL.Path, strings.TrimPrefix(payload, "/")) {
+			t.Errorf("%sFAILED - Payload not found in path:\nPayload: %s\nPath: %s%s\n",
+				colorRed, payload, parsedURL.Path, colorReset)
 			continue
 		}
 
@@ -146,13 +165,7 @@ func TestMidPathPayloads(t *testing.T) {
 			parsedUrlForComparison += "#" + parsedURL.Fragment
 		}
 
-		// Compare with original
-		if parsedUrlForComparison != testURL {
-			fmt.Printf("%sFAILED - Payload: %s\ntestURL: %s\nScheme: %s\nHost: %s\nPath: %s\nQuery: %s\nFragment: %s%s\n\n",
-				colorRed, payload, testURL, parsedURL.Scheme, parsedURL.Host, parsedURL.Path, parsedURL.Query, parsedURL.Fragment, colorReset)
-		} else {
-			fmt.Printf("%sPASSED - Payload: %s\ntestURL: %s\nScheme: %s\nHost: %s\nPath: %s\nQuery: %s\nFragment: %s%s\n\n",
-				colorGreen, payload, testURL, parsedURL.Scheme, parsedURL.Host, parsedURL.Path, parsedURL.Query, parsedURL.Fragment, colorReset)
-		}
+		fmt.Printf("%sPASSED - Payload correctly parsed in path:\nPayload: %s\ntestURL: %s\nParsed Path: %s%s\n\n",
+			colorGreen, payload, testURL, parsedURL.Path, colorReset)
 	}
 }

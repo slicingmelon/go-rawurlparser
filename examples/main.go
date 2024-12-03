@@ -70,16 +70,24 @@ func main() {
 		}
 
 		// rawurlparser
-		rawURL := rawurlparser.RawURLParse(testURL)
-		fmt.Printf("\nrawurlparser.RawURLParse:\n")
-		fmt.Printf("Full URL: %s\n", rawURL)
-		fmt.Printf("Path: %s\n", rawURL.Path)
+		rawURL, err := rawurlparser.RawURLParse(testURL)
+		if err != nil {
+			fmt.Printf("%srawurlparser.RawURLParse error: %v%s\n", redColor, err, resetColor)
+		} else {
+			fmt.Printf("\nrawurlparser.RawURLParse:\n")
+			fmt.Printf("Original URL: %s\n", rawURL.Original)
+			fmt.Printf("Parsed Scheme: %s\n", rawURL.Scheme)
+			fmt.Printf("Parsed Host: %s\n", rawURL.Host)
+			fmt.Printf("Parsed Path: %s\n", rawURL.Path)
+			fmt.Printf("Parsed Query: %s\n", rawURL.Query)
+			fmt.Printf("Parsed Fragment: %s\n", rawURL.Fragment)
 
-		// Compare full URLs if standard parsing succeeded
-		if err == nil && stdFullURL != rawURL.String() {
-			fmt.Printf("\n%s## Closer URLs Comparison ##%s\n", redColor, resetColor)
-			fmt.Printf("%sStandard UrlParser: %s%s\n", redColor, stdFullURL, resetColor)
-			fmt.Printf("%sRawUrlParser:      %s%s\n", redColor, rawURL, resetColor)
+			// Compare full URLs if standard parsing succeeded
+			if err == nil && stdFullURL != rawURL.String() {
+				fmt.Printf("\n%s## Closer URLs Comparison ##%s\n", redColor, resetColor)
+				fmt.Printf("%sStandard GoUrlParser: %s%s\n", redColor, stdFullURL, resetColor)
+				fmt.Printf("%sRawUrlParser:      %s%s\n", redColor, rawURL, resetColor)
+			}
 		}
 
 		fmt.Printf("========================================\n")
