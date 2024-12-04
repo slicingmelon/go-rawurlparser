@@ -109,9 +109,9 @@ func TestURLHelperMethods(t *testing.T) {
 		t.Fatalf("Failed to parse URL: %v", err)
 	}
 
-	port := GetRawPort(parsedURL)
-	hostname := GetRawHostname(parsedURL)
-	params := parsedURL.GetRawQueryValues()
+	port := parsedURL.GetPort()
+	hostname := parsedURL.GetHostname()
+	params := parsedURL.GetQueryValues()
 
 	fmt.Printf("Parsed Port: %s\n", port)
 	fmt.Printf("Parsed Hostname: %s\n", hostname)
@@ -238,7 +238,7 @@ func TestIPAddressURLs(t *testing.T) {
 				t.Errorf("Path = %q, want %q", parsedURL.Path, tc.wantPath)
 			}
 
-			gotPort := GetRawPort(parsedURL)
+			gotPort := parsedURL.GetPort()
 			if gotPort != tc.wantPort {
 				t.Errorf("Port = %q, want %q", gotPort, tc.wantPort)
 			}
