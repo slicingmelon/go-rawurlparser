@@ -1,13 +1,18 @@
+# Ignore everything
 *
+
+# Do not ignore these specific files
+!.gitignore
 !README.md
 !LICENSE
-!.gitignore 
 
+# Do not ignore all .go, .mod, .sum files
 !*.go
 !*.mod
 !*.sum
 
-!data/*.txt
+# Do not ignore .jpg files in the images directory
 !images/*.jpg
 
-
+# Ignore the data directory and all its contents
+data/

@@ -25,6 +25,20 @@ const (
 	RawURI
 )
 
+// URLBuilder represents a mutable URL structure for manipulation
+type RawURLBuilder struct {
+	*RawURL           // Embed the original RawURL
+	workingURI string // Working copy of RequestURI
+}
+
+// NewURLBuilder creates a new builder from RawURL
+func NewRawURLBuilder(u *RawURL) *RawURLBuilder {
+	return &RawURLBuilder{
+		RawURL:     u,
+		workingURI: u.RawRequestURI,
+	}
+}
+
 // FullString reconstructs the URL from its components
 // deprecated
 func (u *RawURL) FullString() string {
@@ -104,22 +118,42 @@ func GetRawHost(u *RawURL) string {
 }
 
 // GetRawHostname reconstructs the hostname of the URL (without port)
-func GetRawHostname(u *RawURL) string {
-	var buf strings.Builder
-	if i := strings.LastIndex(u.Host, ":"); i != -1 {
-		buf.WriteString(u.Host[:i])
-	} else {
-		buf.WriteString(u.Host)
+func (u *RawURL) GetHostname() string {
+	host := u.Host
+
+	// Handle IPv6 addresses
+	if strings.HasPrefix(host, "[") {
+		if closeBracket := strings.LastIndex(host, "]"); closeBracket != -1 {
+			return host[:closeBracket+1]
+		}
+		return host
 	}
-	return buf.String()
+
+	// Handle IPv4 and regular hostnames
+	if i := strings.LastIndex(host, ":"); i != -1 {
+		return host[:i]
+	}
+	return host
 }
 
 // GetRawPort reconstructs the port of the URL
-func GetRawPort(u *RawURL) string {
-	var buf strings.Builder
-	if i := strings.LastIndex(u.Host, ":"); i != -1 {
-		buf.WriteString(u.Host[i+1:])
-		return buf.String()
+func (u *RawURL) GetPort() string {
+	host := u.Host
+
+	// Handle IPv6 addresses
+	if strings.HasPrefix(host, "[") {
+		if closeBracket := strings.LastIndex(host, "]"); closeBracket != -1 {
+			if len(host) > closeBracket+1 && host[closeBracket+1] == ':' {
+				return host[closeBracket+2:]
+			}
+			return ""
+		}
+		return ""
+	}
+
+	// Handle IPv4 and regular hostnames
+	if i := strings.LastIndex(host, ":"); i != -1 {
+		return host[i+1:]
 	}
 	return ""
 }
@@ -183,7 +217,7 @@ func GetRawFragment(u *RawURL) string {
 }
 
 // QueryValues returns a map of query parameters
-func (u *RawURL) GetRawQueryValues() map[string][]string {
+func (u *RawURL) GetQueryValues() map[string][]string {
 	values := make(map[string][]string)
 	for _, pair := range strings.Split(u.Query, "&") {
 		if pair == "" {
@@ -304,14 +338,14 @@ func (u *RawURL) UpdateRawURL(component URLComponent, newValue string) {
 		u.User.passwordSet = true
 	case Host:
 		// Update host without affecting port
-		if port := GetRawPort(u); port != "" {
+		if port := u.GetPort(); port != "" {
 			u.Host = newValue + ":" + port
 		} else {
 			u.Host = newValue
 		}
 	case Port:
 		// Update port without affecting host
-		hostname := GetRawHostname(u)
+		hostname := u.GetHostname()
 		if newValue != "" {
 			u.Host = hostname + ":" + newValue
 		} else {
