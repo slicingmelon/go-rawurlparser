@@ -7,7 +7,6 @@
 !*.mod
 !*.sum
 
-!data/*.txt
 !images/*.jpg
 
 
