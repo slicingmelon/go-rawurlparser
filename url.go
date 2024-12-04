@@ -119,13 +119,17 @@ func RawURLParseWithOptions(rawURL string, opts *ParseOptions) (*RawURL, error) 
 			return nil, ErrInvalidURL
 		}
 
+		// Get the IPv6 address part
 		result.Host = authority[:closeBracket+1]
+
+		// Check for port after the IPv6 address
 		if len(authority) > closeBracket+1 {
 			if authority[closeBracket+1] == ':' {
-				result.Host = authority
+				result.Host = authority // Include the full authority with port
 			}
 		}
 	} else {
+		// Handle IPv4 and regular hostnames
 		result.Host = authority
 	}
 
