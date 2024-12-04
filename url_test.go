@@ -169,3 +169,88 @@ func TestMidPathPayloads(t *testing.T) {
 			colorGreen, payload, testURL, parsedURL.Path, colorReset)
 	}
 }
+
+func TestIPAddressURLs(t *testing.T) {
+	testCases := []struct {
+		name     string
+		input    string
+		wantHost string
+		wantPath string
+		wantPort string
+	}{
+		{
+			name:     "IPv4 with scheme and path",
+			input:    "http://192.168.1.1/test",
+			wantHost: "192.168.1.1",
+			wantPath: "/test",
+			wantPort: "",
+		},
+		{
+			name:     "IPv4 with port and path",
+			input:    "192.168.10.10:443/x/y",
+			wantHost: "192.168.10.10:443",
+			wantPath: "/x/y",
+			wantPort: "443",
+		},
+		{
+			name:     "IPv4 with scheme, port and path",
+			input:    "https://10.0.0.1:8080/admin",
+			wantHost: "10.0.0.1:8080",
+			wantPath: "/admin",
+			wantPort: "8080",
+		},
+		{
+			name:     "IPv6 with scheme",
+			input:    "http://[2001:db8::1]/test",
+			wantHost: "[2001:db8::1]",
+			wantPath: "/test",
+			wantPort: "",
+		},
+		{
+			name:     "IPv6 with port",
+			input:    "[2001:db8::1]:8443/secure",
+			wantHost: "[2001:db8::1]:8443",
+			wantPath: "/secure",
+			wantPort: "8443",
+		},
+		{
+			name:     "IPv4 localhost with port",
+			input:    "127.0.0.1:3000/api/v1",
+			wantHost: "127.0.0.1:3000",
+			wantPath: "/api/v1",
+			wantPort: "3000",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			parsedURL, err := RawURLParse(tc.input)
+			if err != nil {
+				t.Errorf("RawURLParse(%q) returned error: %v", tc.input, err)
+				return
+			}
+
+			if parsedURL.Host != tc.wantHost {
+				t.Errorf("Host = %q, want %q", parsedURL.Host, tc.wantHost)
+			}
+
+			if parsedURL.Path != tc.wantPath {
+				t.Errorf("Path = %q, want %q", parsedURL.Path, tc.wantPath)
+			}
+
+			gotPort := GetRawPort(parsedURL)
+			if gotPort != tc.wantPort {
+				t.Errorf("Port = %q, want %q", gotPort, tc.wantPort)
+			}
+
+			// Print the results for visual inspection
+			fmt.Printf("\nTesting: %s\n", tc.input)
+			fmt.Printf("----------------------------------------\n")
+			fmt.Printf("Host: %s\n", parsedURL.Host)
+			fmt.Printf("Path: %s\n", parsedURL.Path)
+			fmt.Printf("Port: %s\n", gotPort)
+			fmt.Printf("Full URL: %s\n", parsedURL.GetRawFullURL())
+			fmt.Printf("----------------------------------------\n")
+		})
+	}
+}
