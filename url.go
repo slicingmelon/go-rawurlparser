@@ -8,6 +8,7 @@ package rawurlparser
 
 import (
 	"errors"
+	"fmt"
 	"strings"
 )
 
@@ -221,4 +222,9 @@ func validOptionalPort(port string) bool {
 		}
 	}
 	return true
+}
+
+// The most basic function to quickly get the base URL using fmt.Sprintf
+func (u *RawURL) GetBaseURL() string {
+	return fmt.Sprintf("%s://%s", u.Scheme, u.Host)
 }
