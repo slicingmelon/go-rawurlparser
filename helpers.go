@@ -403,7 +403,8 @@ func splitHostPort(hostPort string) (host, port string) {
 	return
 }
 
-// validOptionalPort reports whether port is either an empty string
+//	validOptionalPort reports whether port is either an empty string
+//
 // or matches /^:\d*$/
 func validOptionalPort(port string) bool {
 	if port == "" {
