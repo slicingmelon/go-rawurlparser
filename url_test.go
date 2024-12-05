@@ -254,3 +254,84 @@ func TestIPAddressURLs(t *testing.T) {
 		})
 	}
 }
+
+func TestURLAccessorMethods(t *testing.T) {
+	testCases := []struct {
+		name         string
+		input        string
+		wantHostname string
+		wantPort     string
+		wantBaseURL  string
+	}{
+		{
+			name:         "Simple URL",
+			input:        "https://example.com/path",
+			wantHostname: "example.com",
+			wantPort:     "",
+			wantBaseURL:  "https://example.com",
+		},
+		{
+			name:         "URL with port",
+			input:        "http://localhost:8080/api",
+			wantHostname: "localhost",
+			wantPort:     "8080",
+			wantBaseURL:  "http://localhost:8080",
+		},
+		{
+			name:         "IPv6 with port",
+			input:        "https://[2001:db8::1]:8443/secure",
+			wantHostname: "[2001:db8::1]",
+			wantPort:     "8443",
+			wantBaseURL:  "https://[2001:db8::1]:8443",
+		},
+		{
+			name:         "URL with credentials",
+			input:        "https://user:pass@api.example.com:443/v1",
+			wantHostname: "api.example.com",
+			wantPort:     "443",
+			wantBaseURL:  "https://api.example.com:443",
+		},
+		{
+			name:         "IPv4 with port",
+			input:        "http://192.168.1.1:3000/admin",
+			wantHostname: "192.168.1.1",
+			wantPort:     "3000",
+			wantBaseURL:  "http://192.168.1.1:3000",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			parsedURL, err := RawURLParse(tc.input)
+			if err != nil {
+				t.Fatalf("Failed to parse URL %q: %v", tc.input, err)
+			}
+
+			// Test Hostname() method
+			gotHostname := parsedURL.Hostname()
+			if gotHostname != tc.wantHostname {
+				t.Errorf("Hostname() = %q, want %q", gotHostname, tc.wantHostname)
+			}
+
+			// Test Port() method
+			gotPort := parsedURL.Port()
+			if gotPort != tc.wantPort {
+				t.Errorf("Port() = %q, want %q", gotPort, tc.wantPort)
+			}
+
+			// Test BaseURL() method
+			gotBaseURL := parsedURL.BaseURL()
+			if gotBaseURL != tc.wantBaseURL {
+				t.Errorf("BaseURL() = %q, want %q", gotBaseURL, tc.wantBaseURL)
+			}
+
+			// Print results for visual inspection
+			fmt.Printf("\nTesting: %s\n", tc.input)
+			fmt.Printf("----------------------------------------\n")
+			fmt.Printf("Hostname: %s\n", gotHostname)
+			fmt.Printf("Port: %s\n", gotPort)
+			fmt.Printf("BaseURL: %s\n", gotBaseURL)
+			fmt.Printf("----------------------------------------\n")
+		})
+	}
+}

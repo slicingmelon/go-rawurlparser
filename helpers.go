@@ -117,16 +117,21 @@ func GetRawHost(u *RawURL) string {
 	return buf.String()
 }
 
-// GetRawHostname reconstructs the hostname of the URL (without port)
+// GetHostname returns the hostname without port.
+// For IPv6 addresses, the square brackets are preserved.
 func (u *RawURL) GetHostname() string {
 	host := u.Host
 
 	// Handle IPv6 addresses
 	if strings.HasPrefix(host, "[") {
 		if closeBracket := strings.LastIndex(host, "]"); closeBracket != -1 {
-			return host[:closeBracket+1]
+			// Return the IPv6 address with brackets
+			if len(host) > closeBracket+1 && host[closeBracket+1] == ':' {
+				return host[:closeBracket+1]
+			}
+			return host
 		}
-		return host
+		return host // Malformed IPv6, return as-is
 	}
 
 	// Handle IPv4 and regular hostnames
@@ -136,7 +141,8 @@ func (u *RawURL) GetHostname() string {
 	return host
 }
 
-// GetRawPort reconstructs the port of the URL
+// GetPort returns the port part of the host.
+// Returns empty string if no port is present.
 func (u *RawURL) GetPort() string {
 	host := u.Host
 
@@ -144,7 +150,7 @@ func (u *RawURL) GetPort() string {
 	if strings.HasPrefix(host, "[") {
 		if closeBracket := strings.LastIndex(host, "]"); closeBracket != -1 {
 			if len(host) > closeBracket+1 && host[closeBracket+1] == ':' {
-				return host[closeBracket+2:]
+				return host[closeBracket+2:] // Return everything after ]:
 			}
 			return ""
 		}
@@ -153,7 +159,14 @@ func (u *RawURL) GetPort() string {
 
 	// Handle IPv4 and regular hostnames
 	if i := strings.LastIndex(host, ":"); i != -1 {
-		return host[i+1:]
+		port := host[i+1:]
+		// Validate port is numeric
+		for _, b := range port {
+			if b < '0' || b > '9' {
+				return ""
+			}
+		}
+		return port
 	}
 	return ""
 }
@@ -370,6 +383,41 @@ func (u *RawURL) UpdateRawURL(component URLComponent, newValue string) {
 // It's equivalent to UpdateRawURL(RawURI, uri)
 func (u *RawURL) SetRawRequestURI(uri string) {
 	u.UpdateRawURL(RawURI, uri)
+}
+
+// splitHostPort() separates host and port. If the port is not valid, it returns
+// the entire input as host, and it doesn't check the validity of the host.
+// Unlike net.SplitHostPort, but per RFC 3986, it requires ports to be numeric.
+func splitHostPort(hostPort string) (host, port string) {
+	host = hostPort
+
+	colon := strings.LastIndexByte(host, ':')
+	if colon != -1 && validOptionalPort(host[colon:]) {
+		host, port = host[:colon], host[colon+1:]
+	}
+
+	if strings.HasPrefix(host, "[") && strings.HasSuffix(host, "]") {
+		host = host[1 : len(host)-1]
+	}
+
+	return
+}
+
+// validOptionalPort reports whether port is either an empty string
+// or matches /^:\d*$/
+func validOptionalPort(port string) bool {
+	if port == "" {
+		return true
+	}
+	if port[0] != ':' {
+		return false
+	}
+	for _, b := range port[1:] {
+		if b < '0' || b > '9' {
+			return false
+		}
+	}
+	return true
 }
 
 // GetAsciiHex returns hex value of ascii char

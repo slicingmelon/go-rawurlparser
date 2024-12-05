@@ -8,6 +8,7 @@ package rawurlparser
 
 import (
 	"errors"
+	"fmt"
 	"strings"
 )
 
@@ -171,4 +172,23 @@ func RawURLParse(rawURL string) (*RawURL, error) {
 // RawURLParseStrict parses URL without fallback scheme
 func RawURLParseStrict(rawURL string) (*RawURL, error) {
 	return RawURLParseWithOptions(rawURL, nil)
+}
+
+// Hostname() returns u.Host, stripping any valid port number if present.
+// If the result is enclosed in square brackets, as literal IPv6 addresses are,
+// the square brackets are removed from the result.
+func (u *RawURL) Hostname() string {
+	// Use existing GetHostname method for consistency
+	return u.GetHostname()
+}
+
+// Port() returns the port part of u.Host, without the leading colon.
+// If u.Host doesn't contain a valid numeric port, Port returns an empty string.
+func (u *RawURL) Port() string {
+	return u.GetPort()
+}
+
+// The most basic function to quickly get the base URL using fmt.Sprintf
+func (u *RawURL) BaseURL() string {
+	return fmt.Sprintf("%s://%s", u.Scheme, u.Host)
 }
