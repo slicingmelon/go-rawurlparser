@@ -150,6 +150,9 @@ func RawURLParseWithOptions(rawURL string, opts *ParseOptions) (*RawURL, error) 
 
 		// What's left is the path
 		result.Path = remaining
+	} else {
+		// Ensure Path is always set to "/" when empty
+		result.Path = "/"
 	}
 
 	// Build RawRequestURI
