@@ -10,72 +10,23 @@ import (
 
 // Helper methods //
 
-// URLComponent represents different parts of a URL that can be updated
-type URLComponent int
-
-const (
-	Scheme URLComponent = iota
-	Username
-	Password
-	Host
-	Port
-	Path
-	Query
-	Fragment
-	RawURI
-)
-
 // URLBuilder represents a mutable URL structure for manipulation
-type RawURLBuilder struct {
-	*RawURL           // Embed the original RawURL
-	workingURI string // Working copy of RequestURI
-}
+// WIP
+// type RawURLBuilder struct {
+// 	*RawURL           // Embed the original RawURL
+// 	workingURI string // Working copy of RequestURI
+// }
 
-// NewURLBuilder creates a new builder from RawURL
-func NewRawURLBuilder(u *RawURL) *RawURLBuilder {
-	return &RawURLBuilder{
-		RawURL:     u,
-		workingURI: u.RawRequestURI,
-	}
-}
+// // NewURLBuilder creates a new builder from RawURL
+// func NewRawURLBuilder(u *RawURL) *RawURLBuilder {
+// 	return &RawURLBuilder{
+// 		RawURL:     u,
+// 		workingURI: u.RawRequestURI,
+// 	}
+// }
 
-// FullString reconstructs the URL from its components
-// deprecated
-func (u *RawURL) FullString() string {
-	var buf strings.Builder
-
-	if u.Scheme != "" {
-		buf.WriteString(u.Scheme)
-		buf.WriteString("://")
-	}
-
-	if u.User != nil {
-		buf.WriteString(u.User.username)
-		if u.User.passwordSet {
-			buf.WriteRune(':')
-			buf.WriteString(u.User.password)
-		}
-		buf.WriteRune('@')
-	}
-
-	buf.WriteString(u.Host)
-	buf.WriteString(u.Path)
-
-	if u.Query != "" {
-		buf.WriteRune('?')
-		buf.WriteString(u.Query)
-	}
-
-	if u.Fragment != "" {
-		buf.WriteRune('#')
-		buf.WriteString(u.Fragment)
-	}
-
-	return buf.String()
-}
-
-// GetRawScheme reconstructs the scheme from its components
-func GetRawScheme(u *RawURL) string {
+// GetScheme reconstructs the scheme from its components and returns a string representation
+func GetScheme(u *RawURL) string {
 	if u.Scheme == "" {
 		return ""
 	}
@@ -85,8 +36,8 @@ func GetRawScheme(u *RawURL) string {
 	return buf.String()
 }
 
-// GetRawUserInfo reconstructs the userinfo from its components
-func GetRawUserInfo(u *RawURL) string {
+// GetUserInfo reconstructs the userinfo from its components
+func GetUserInfo(u *RawURL) string {
 	if u.User == nil {
 		return ""
 	}
@@ -100,132 +51,30 @@ func GetRawUserInfo(u *RawURL) string {
 	return buf.String()
 }
 
-// GetRawAuthority reconstructs the authority from its components
-func GetRawAuthority(u *RawURL) string {
+// GetAuthority reconstructs the authority from its components and returns a string representation
+func GetAuthority(u *RawURL) string {
 	var buf strings.Builder
+
+	// Add userinfo if present
 	if u.User != nil {
-		buf.WriteString(GetRawUserInfo(u))
+		buf.WriteString(u.User.username)
+		if u.User.passwordSet {
+			buf.WriteByte(':')
+			buf.WriteString(u.User.password)
+		}
+		buf.WriteByte('@')
 	}
+
+	// Add host
 	buf.WriteString(u.Host)
+
 	return buf.String()
 }
 
-// GetRawHost reconstructs the host of the URL (with port)
-func GetRawHost(u *RawURL) string {
+// GetHost returns the string representation of the Host
+func GetHost(u *RawURL) string {
 	var buf strings.Builder
 	buf.WriteString(u.Host)
-	return buf.String()
-}
-
-// GetHostname returns the hostname without port.
-// For IPv6 addresses, the square brackets are preserved.
-func (u *RawURL) GetHostname() string {
-	host := u.Host
-
-	// Handle IPv6 addresses
-	if strings.HasPrefix(host, "[") {
-		if closeBracket := strings.LastIndex(host, "]"); closeBracket != -1 {
-			// Return the IPv6 address with brackets
-			if len(host) > closeBracket+1 && host[closeBracket+1] == ':' {
-				return host[:closeBracket+1]
-			}
-			return host
-		}
-		return host // Malformed IPv6, return as-is
-	}
-
-	// Handle IPv4 and regular hostnames
-	if i := strings.LastIndex(host, ":"); i != -1 {
-		return host[:i]
-	}
-	return host
-}
-
-// GetPort returns the port part of the host.
-// Returns empty string if no port is present.
-func (u *RawURL) GetPort() string {
-	host := u.Host
-
-	// Handle IPv6 addresses
-	if strings.HasPrefix(host, "[") {
-		if closeBracket := strings.LastIndex(host, "]"); closeBracket != -1 {
-			if len(host) > closeBracket+1 && host[closeBracket+1] == ':' {
-				return host[closeBracket+2:] // Return everything after ]:
-			}
-			return ""
-		}
-		return ""
-	}
-
-	// Handle IPv4 and regular hostnames
-	if i := strings.LastIndex(host, ":"); i != -1 {
-		port := host[i+1:]
-		// Validate port is numeric
-		for _, b := range port {
-			if b < '0' || b > '9' {
-				return ""
-			}
-		}
-		return port
-	}
-	return ""
-}
-
-// GetRawPath reconstructs the path from its components
-func GetRawPath(u *RawURL) string {
-	var buf strings.Builder
-	if u.Path == "" {
-		buf.WriteString("/")
-		return buf.String()
-	}
-
-	// Check first byte directly for '/'
-	if len(u.Path) > 0 && u.Path[0] != '/' {
-		buf.WriteString("/")
-	}
-	buf.WriteString(u.Path)
-	return buf.String()
-}
-
-// GetRawPathUnsafe reconstructs the path from its components
-// Similar to GetRawPath but will omit first / in path
-// Might be needed when fuzzing full paths
-func GetRawPathUnsafe(u *RawURL) string {
-	if u.Path == "" {
-		return ""
-	}
-
-	var buf strings.Builder
-	// Skip first char if it's a '/'
-	if len(u.Path) > 0 {
-		if u.Path[0] == '/' {
-			buf.WriteString(u.Path[1:])
-		} else {
-			buf.WriteString(u.Path)
-		}
-	}
-	return buf.String()
-}
-
-// GetRawQuery reconstructs the query from its components
-func GetRawQuery(u *RawURL) string {
-	if u.Query == "" {
-		return ""
-	}
-	var buf strings.Builder
-	buf.WriteRune('?')
-	buf.WriteString(u.Query)
-	return buf.String()
-}
-
-// GetRawFragment reconstructs the fragment from its components
-func GetRawFragment(u *RawURL) string {
-	if u.Fragment == "" {
-		return ""
-	}
-	var buf strings.Builder
-	buf.WriteRune('#')
-	buf.WriteString(u.Fragment)
 	return buf.String()
 }
 
@@ -245,47 +94,6 @@ func (u *RawURL) GetQueryValues() map[string][]string {
 		values[key] = append(values[key], value)
 	}
 	return values
-}
-
-/*
-GetRawFullURL reconstructs the full URL from its components
-
---->  scheme://host/path?query#fragment
-
-	             userinfo      host      port    path		       query		            fragment
-	            |------| |-------------| |--||---------------| |-------------------------| |-----------|
-		https://john.doe@www.example.com:8092/forum/questions/?tag=networking&order=newest#fragmentation
-		|----|  |---------------------------|
-		scheme         authority
-*/
-func (u *RawURL) GetRawFullURL() string {
-	var buf strings.Builder
-
-	// Scheme
-	if u.Scheme != "" {
-		buf.WriteString(u.Scheme)
-		buf.WriteString("://")
-	}
-
-	// Authority (userinfo + host)
-	buf.WriteString(GetRawAuthority(u))
-
-	// Path
-	buf.WriteString(GetRawPath(u))
-
-	// Query
-	if u.Query != "" {
-		buf.WriteRune('?')
-		buf.WriteString(u.Query)
-	}
-
-	// Fragment
-	if u.Fragment != "" {
-		buf.WriteRune('#')
-		buf.WriteString(u.Fragment)
-	}
-
-	return buf.String()
 }
 
 // GetRawRequestURI returns the exact URI as it would appear in an HTTP request line
@@ -317,95 +125,36 @@ func (u *RawURL) GetRawRequestURI() string {
 	return buf.String()
 }
 
-// GetAbsoluteURI returns the full URI including scheme and host
-// Example: "http://example.com/path?query#fragment"
-func (u *RawURL) GetRawAbsoluteURI() string {
-	var buf strings.Builder
-
-	if u.Scheme != "" {
-		buf.WriteString(u.Scheme)
-		buf.WriteString("://")
-	}
-
-	buf.WriteString(GetRawAuthority(u))
-	buf.WriteString(u.GetRawRequestURI())
-
-	return buf.String()
-}
-
-// UpdateRawURL updates a specific component of the URL with a new value
-func (u *RawURL) UpdateRawURL(component URLComponent, newValue string) {
-	switch component {
-	case Scheme:
-		u.Scheme = newValue
-	case Username:
-		if u.User == nil {
-			u.User = &Userinfo{}
-		}
-		u.User.username = newValue
-	case Password:
-		if u.User == nil {
-			u.User = &Userinfo{}
-		}
-		u.User.password = newValue
-		u.User.passwordSet = true
-	case Host:
-		// Update host without affecting port
-		if port := u.GetPort(); port != "" {
-			u.Host = newValue + ":" + port
-		} else {
-			u.Host = newValue
-		}
-	case Port:
-		// Update port without affecting host
-		hostname := u.GetHostname()
-		if newValue != "" {
-			u.Host = hostname + ":" + newValue
-		} else {
-			u.Host = hostname
-		}
-	case Path:
-		u.Path = newValue
-		u.RawRequestURI = "" // Clear any custom raw URI when updating path
-	case Query:
-		u.Query = newValue
-		u.RawRequestURI = "" // Clear any custom raw URI when updating query
-	case Fragment:
-		u.Fragment = newValue
-		u.RawRequestURI = "" // Clear any custom raw URI when updating fragment
-	case RawURI:
-		u.RawRequestURI = newValue // Same as SetRawRequestURI
-	}
-}
-
-// SetRawRequestURI allows setting a custom request URI
-// This is useful for fuzzing/testing with non-standard URIs
-// It's equivalent to UpdateRawURL(RawURI, uri)
-func (u *RawURL) SetRawRequestURI(uri string) {
-	u.UpdateRawURL(RawURI, uri)
-}
-
-// splitHostPort() separates host and port. If the port is not valid, it returns
+// SplitHostPort() separates host and port. If the port is not valid, it returns
 // the entire input as host, and it doesn't check the validity of the host.
 // Unlike net.SplitHostPort, but per RFC 3986, it requires ports to be numeric.
-func splitHostPort(hostPort string) (host, port string) {
-	host = hostPort
-
-	colon := strings.LastIndexByte(host, ':')
-	if colon != -1 && validOptionalPort(host[colon:]) {
-		host, port = host[:colon], host[colon+1:]
+// splitHostPort separates host and port while handling IPv6 addresses
+func SplitHostPort(hostPort string) (host, port string) {
+	// Handle IPv6 addresses
+	if strings.HasPrefix(hostPort, "[") {
+		closeBracket := strings.Index(hostPort, "]")
+		if closeBracket != -1 {
+			host = hostPort[1:closeBracket]
+			if len(hostPort) > closeBracket+1 && hostPort[closeBracket+1] == ':' {
+				port = hostPort[closeBracket+2:]
+			}
+			return
+		}
 	}
 
-	if strings.HasPrefix(host, "[") && strings.HasSuffix(host, "]") {
-		host = host[1 : len(host)-1]
+	// Handle regular host:port
+	colon := strings.LastIndex(hostPort, ":")
+	if colon != -1 && validOptionalPort(hostPort[colon:]) {
+		host = hostPort[:colon]
+		port = hostPort[colon+1:]
+	} else {
+		host = hostPort
 	}
-
 	return
 }
 
-//	validOptionalPort reports whether port is either an empty string
-//
-// or matches /^:\d*$/
+// validOptionalPort reports whether port is either an empty string
+// or matches /^:\d+$/
 func validOptionalPort(port string) bool {
 	if port == "" {
 		return true
@@ -413,8 +162,8 @@ func validOptionalPort(port string) bool {
 	if port[0] != ':' {
 		return false
 	}
-	for _, b := range port[1:] {
-		if b < '0' || b > '9' {
+	for _, c := range port[1:] {
+		if c < '0' || c > '9' {
 			return false
 		}
 	}

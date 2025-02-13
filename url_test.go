@@ -249,7 +249,7 @@ func TestIPAddressURLs(t *testing.T) {
 			fmt.Printf("Host: %s\n", parsedURL.Host)
 			fmt.Printf("Path: %s\n", parsedURL.Path)
 			fmt.Printf("Port: %s\n", gotPort)
-			fmt.Printf("Full URL: %s\n", parsedURL.GetRawFullURL())
+			fmt.Printf("Full URL: %s\n", parsedURL.String())
 			fmt.Printf("----------------------------------------\n")
 		})
 	}
@@ -308,13 +308,13 @@ func TestURLAccessorMethods(t *testing.T) {
 			}
 
 			// Test Hostname() method
-			gotHostname := parsedURL.Hostname()
+			gotHostname := parsedURL.Hostname
 			if gotHostname != tc.wantHostname {
 				t.Errorf("Hostname() = %q, want %q", gotHostname, tc.wantHostname)
 			}
 
 			// Test Port() method
-			gotPort := parsedURL.Port()
+			gotPort := parsedURL.Port
 			if gotPort != tc.wantPort {
 				t.Errorf("Port() = %q, want %q", gotPort, tc.wantPort)
 			}

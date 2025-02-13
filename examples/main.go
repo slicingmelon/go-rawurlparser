@@ -83,7 +83,7 @@ func main() {
 			fmt.Printf("Parsed Fragment: %s\n", rawURL.Fragment)
 
 			// Compare full URLs if standard parsing succeeded
-			if err == nil && stdFullURL != rawURL.String() {
+			if err == nil && stdFullURL != rawURL.RawRequestURI {
 				fmt.Printf("\n%s## Closer URLs Comparison ##%s\n", redColor, resetColor)
 				fmt.Printf("%sStandard GoUrlParser: %s%s\n", redColor, stdFullURL, resetColor)
 				fmt.Printf("%sRawUrlParser:      %s%s\n", redColor, rawURL, resetColor)
