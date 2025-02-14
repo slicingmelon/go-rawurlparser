@@ -153,14 +153,7 @@ func main() {
 
 The pkg provides several helper methods:
 
-- `GetRawFullURL()` - Reconstructs the full URL from its components
-- `GetRawRequestURI()` - Returns the exact URI as it would appear in an HTTP request line
-- `GetRawAbsoluteURI()` - Returns the full URI including scheme and host
-- `GetRawPort()` - Returns the port number from the host if present
-- `GetRawHostname()` - Returns the hostname (without the port)
-- `GetRawQueryValues()` - Parses query string into a map[string][]string
-- `UpdateRawURL()` - Updates a specific component of the URL with a new value
-- `GetRawPath()` - Returns the path component of the URL
+Check go docs to see the functions.
 
 ## Error Handling
 
